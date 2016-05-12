@@ -74,33 +74,6 @@ class Event(BASE):
     source = Column(String(100))
     notes = Column(String(500))
     fatalities = Column(Integer())
-
-'''
-class Conflict(BASE):
-    __tablename__ = 'conflict'
-    interaction_id = Column(Integer, primary_key=True)
-
-    actor_1_id = Column(Integer, ForeignKey('actor.actor_id'))
-    actor_ally_1_id = Column(Integer, ForeignKey('actor.actor_id'))
-    actor_2_id = Column(Integer, ForeignKey('actor.actor_id'))
-    actor_ally_2_id = Column(Integer, ForeignKey('actor.actor_id'))
-    
-    actor_1 = relationship('Actor', foreign_keys=actor_1_id)
-    actor_ally_1 = relationship('Actor', foreign_keys=actor_ally_1_id)
-    actor_2 = relationship('Actor', foreign_keys=actor_2_id)
-    actor_ally_2 = relationship('Actor', foreign_keys=actor_ally_2_id)
-    
-    
-    inter_1_id = Column(Integer, ForeignKey('interaction.interaction_id'))
-    inter_2_id = Column(Integer, ForeignKey('interaction.interaction_id'))
-    inter_1 = relationship('Interaction', foreign_keys=inter_1_id)
-    inter_2 = relationship('Interaction', foreign_keys=inter_2_id)
-    
-    interaction = Column(Integer)
-    event_id = Column(Integer, ForeignKey('event.event_id'))
-    event = relationship('Event')
-'''
-
 if __name__ == '__main__':
     with SSHTunnelForwarder(
         (sys.argv[1], 22),
