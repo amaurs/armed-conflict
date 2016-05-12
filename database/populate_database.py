@@ -29,7 +29,22 @@ def populate(path, session):
     populate_events(path, session)
     
     session.close_all()
-
+def populate_countries(path, session):
+    with open(path, 'rb') as csvfile:
+        reader = csv.reader(csvfile)
+        headers = reader.next()
+        print headers
+        countries = {}
+        for row in reader:
+            country = Country(name=row[14], gwno=row[0])
+            countries[row[14]] = country
+        country_id = 1
+        for key in countries:
+            COUNTRIES[key] = country_id
+            session.add(countries[key])
+            country_id = country_id + 1
+        session.commit()
+        print 'added all countries'
 def populate_actors(path, session):
     with open(path, 'rb') as csvfile:
         reader = csv.reader(csvfile)
@@ -235,25 +250,7 @@ def populate_events(path, session):
             progress = progress + 1
             region_id = region_id + 1
             print "Ingested %s out of %s events." % (progress, total)
-        print 'added all events'        
-
-
-def populate_countries(path, session):
-    with open(path, 'rb') as csvfile:
-        reader = csv.reader(csvfile)
-        headers = reader.next()
-        print headers
-        countries = {}
-        for row in reader:
-            country = Country(name=row[14], gwno=row[0])
-            countries[row[14]] = country
-        country_id = 1
-        for key in countries:
-            COUNTRIES[key] = country_id
-            #session.add(countries[key])
-            country_id = country_id + 1
-        #session.commit()
-        print 'added all countries'
+        print 'added all events'
 if __name__ == '__main__':
     with SSHTunnelForwarder(
         (sys.argv[1], 22),
