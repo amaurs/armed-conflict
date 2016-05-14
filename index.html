@@ -20,7 +20,85 @@
 <!-- Example data. -->
 <script src="/mapbox.js/assets/data/realworld.388.js"></script>
 
-<div id='map'></div>
+<div style="float: left; clear: none">
+   <div id='map' style="width: 100%; height: 95%">
+   </div>
+   <div style="position:absolute;bottom:0; width: 100%; height: 5%">
+    <select id='countries'>
+        <option value="16">Algeria</option>
+        <option value="35">Angola</option>
+        <option value="14">Benin</option>
+        <option value="49">Botswana</option>
+        <option value="13">Burkina Faso</option>
+        <option value="45">Burundi</option>
+        <option value="12">Cameroon</option>
+        <option value="27">Central African Republic</option>
+        <option value="36">Chad</option>
+        <option value="48">Democratic Republic of Congo</option>
+        <option value="41">Djibouti</option>
+        <option value="38">Egypt</option>
+        <option value="37">Equatorial Guinea</option>
+        <option value="23">Eritrea</option>
+        <option value="6">Ethiopia</option>
+        <option value="30">Gabon</option>
+        <option value="25">Gambia</option>
+        <option value="15">Ghana</option>
+        <option value="5">Guinea</option>
+        <option value="32">Guinea-Bissau</option>
+        <option value="9">Ivory Coast</option>
+        <option value="46">Kenya</option>
+        <option value="40">Lesotho</option>
+        <option value="3">Liberia</option>
+        <option value="24">Libya</option>
+        <option value="1">Madagascar</option>
+        <option value="19">Malawi</option>
+        <option value="33">Mali</option>
+        <option value="29">Mauritania</option>
+        <option value="28">Morocco</option>
+        <option value="42">Mozambique</option>
+        <option value="34">Namibia</option>
+        <option value="47">Niger</option>
+        <option value="11">Nigeria</option>
+        <option value="10">Republic of Congo</option>
+        <option value="7">Rwanda</option>
+        <option value="18">Senegal</option>
+        <option value="22">Sierra Leone</option>
+        <option value="8">Somalia</option>
+        <option value="39">South Africa</option>
+        <option value="31">South Sudan</option>
+        <option value="4">Sudan</option>
+        <option value="2">Swaziland</option>
+        <option value="26">Tanzania</option>
+        <option value="20">Togo</option>
+        <option value="43">Tunisia</option>
+        <option value="44">Uganda</option>
+        <option value="17">Zambia</option>
+        <option value="21">Zimbabwe</option>
+    </select>
+
+    <select id='years'>
+        <option value="1997">1997</option>
+        <option value="1998">1998</option>
+        <option value="1999">1999</option>
+        <option value="2000">2000</option>
+        <option value="2001">2001</option>
+        <option value="2002">2002</option>
+        <option value="2003">2003</option>
+        <option value="2004">2004</option>
+        <option value="2005">2005</option>
+        <option value="2006">2006</option>
+        <option value="2007">2007</option>
+        <option value="2008">2008</option>
+        <option value="2009">2009</option>
+        <option value="2010">2010</option>
+        <option value="2011">2011</option>
+        <option value="2012">2012</option>
+        <option value="2013">2013</option>
+        <option value="2014">2014</option>
+        <option value="2015">2015</option>
+    </select>
+   </div>
+</div>
 
 <script>
 
@@ -31,16 +109,47 @@ function querystring(key) {
    return r;
 }
 
-L.mapbox.accessToken = 'pk.eyJ1IjoiYW1hdSIsImEiOiIxTmxLVWlVIn0.JJuKgBjkpUtOs0VZjtmJRw';
-    var map = L.mapbox.map('map', 'mapbox.satellite')
+function drawMap()
+{
+    L.mapbox.accessToken = 'pk.eyJ1IjoiYW1hdSIsImEiOiIxTmxLVWlVIn0.JJuKgBjkpUtOs0VZjtmJRw';
+    map = L.mapbox.map('map', 'mapbox.satellite')
         .setView([-8.47162,28.89659], 3);
 
-    var markers = new L.MarkerClusterGroup();
+/**
+    var featureLayer = L.mapbox.featureLayer()
+        .loadURL('http://96.126.98.33:5000/events/' + country + '/' + year)
+        .addTo(map);
+**/
 
-var featureLayer = L.mapbox.featureLayer()
-    .loadURL('http://127.0.0.1:5000/events/' + querystring('country') + '/' + querystring('year'))
-    //.loadURL('http://127.0.0.1:5000/events')
-    .addTo(map);
+        // Since featureLayer is an asynchronous method, we use the `.on('ready'`
+// call to only use its marker data once we know it is actually loaded.
+L.mapbox.featureLayer('http://96.126.98.33:5000/events/' + country + '/' + year).on('ready', function(e) {
+    // The clusterGroup gets each marker in the group added to it
+    // once loaded, and then is added to the map
+    var clusterGroup = new L.MarkerClusterGroup({ disableClusteringAtZoom: 12 });
+    e.target.eachLayer(function(layer) {
+        clusterGroup.addLayer(layer);
+    });
+    map.addLayer(clusterGroup);
+});
+}
+
+var handler = function () {
+    year = document.getElementById('years').value;
+    country = document.getElementById('countries').value;
+    map.remove();
+    drawMap();
+};
+
+var year = document.getElementById('years').value;
+var country = document.getElementById('countries').value;
+var map;
+
+document.getElementById('years').addEventListener('change', handler, false);
+document.getElementById('countries').addEventListener('change', handler, false);
+
+drawMap();
+
 
 
 

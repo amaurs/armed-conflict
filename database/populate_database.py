@@ -9,7 +9,7 @@ import sys
 
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
-from sshtunnel import SSHTunnelForwarder
+#from sshtunnel import SSHTunnelForwarder
 
 from create_database import Actor, Country, BASE
 from database.create_database import Region, Interaction, Event
@@ -256,6 +256,7 @@ def populate_events(path, session):
             print "Ingested %s out of %s events." % (progress, total)
         print 'added all events'
 if __name__ == '__main__':
+    '''
     with SSHTunnelForwarder(
         (sys.argv[1], 22),
         ssh_username=sys.argv[2],
@@ -268,5 +269,7 @@ if __name__ == '__main__':
         klass = sessionmaker(bind=ENGINE)
         
         session = klass()
-        
         populate(sys.argv[6], session)
+    '''
+    pass
+        

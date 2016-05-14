@@ -1,0 +1,6 @@
+deploy.sh
+exclude.txt
+backup
+.git
+.DS_Store
+README.md

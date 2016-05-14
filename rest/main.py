@@ -9,11 +9,9 @@ from flask.globals import current_app, request
 from flask.helpers import make_response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.engine import create_engine
-from sshtunnel import SSHTunnelForwarder
 
 from database.create_database import Country
 from database.query_database import Query
-from rest.config import Config
 
 
 app = Flask(__name__)
@@ -65,14 +63,7 @@ def crossdomain(origin=None, methods=None, headers=None,
 @app.route('/')
 @crossdomain(origin='*')
 def hello():
-    #return 'hello'
-    with SSHTunnelForwarder(
-        (sys.argv[1], 22),
-        ssh_username=sys.argv[2],
-        ssh_password=sys.argv[3],
-        remote_bind_address=('127.0.0.1', 5432)
-        ) as server:
-            engine_url = 'postgres://%s:%s@localhost:%s/armed-conflict' %(sys.argv[4], sys.argv[5], server.local_bind_port)
+            engine_url = 'postgres://%s:%s@localhost/armed-conflict' %(sys.argv[1], sys.argv[2])
             engine = create_engine(engine_url)
             
             query = Query(engine)
@@ -83,14 +74,7 @@ def hello():
 @app.route('/events')
 @crossdomain(origin='*')
 def all_events():
-    #return 'hello'
-    with SSHTunnelForwarder(
-        (sys.argv[1], 22),
-        ssh_username=sys.argv[2],
-        ssh_password=sys.argv[3],
-        remote_bind_address=('127.0.0.1', 5432)
-        ) as server:
-            engine_url = 'postgres://%s:%s@localhost:%s/armed-conflict' %(sys.argv[4], sys.argv[5], server.local_bind_port)
+            engine_url = 'postgres://%s:%s@localhost/armed-conflict' %(sys.argv[1], sys.argv[2])
             engine = create_engine(engine_url)
             
             query = Query(engine)
@@ -105,31 +89,29 @@ def all_events():
 @app.route('/events/<country>/<year>')
 @crossdomain(origin='*')
 def events(country,year):
-    with SSHTunnelForwarder(
-        (sys.argv[1], 22),
-        ssh_username=sys.argv[2],
-        ssh_password=sys.argv[3],
-        remote_bind_address=('127.0.0.1', 5432)
-        ) as server:
-            engine_url = 'postgres://%s:%s@localhost:%s/armed-conflict' %(sys.argv[4], sys.argv[5], server.local_bind_port)
+            engine_url = 'postgres://%s:%s@localhost/armed-conflict' %(sys.argv[1], sys.argv[2])
             
             print engine_url
-            engine = create_engine(engine_url)
-            
-            query = Query(engine)
-            events = query.get_events(country,year)
-            
-            result = { "type": "FeatureCollection",
-                "features": events
-             }
-            
-            return jsonify(result)
+            try:
+                engine = create_engine(engine_url)
+                
+                query = Query(engine)
+                events = query.get_events(country,year)
+                
+                result = { "type": "FeatureCollection",
+                    "features": events
+                 }
+                
+                return jsonify(result)
+            except Exception as inst:
+                print type(inst)     # the exception instance
+                print inst.args      # arguments stored in .args
+                print inst           # __str__ allows args to be printed directly
+                return "<h1>error</h1>"
 
 @app.route('/<name>')
 def hello_name2(name):
     return "Hello {}!".format(name)
 
 if __name__ == '__main__':
-    query = Query(sys.argv)
-    print os.environ.get('SQLALCHEMY_DATABASE_URI') 
-    app.run()
+    app.run(host='0.0.0.0')
