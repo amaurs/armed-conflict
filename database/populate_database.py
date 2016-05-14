@@ -22,11 +22,11 @@ INTERACTIONS = {}
 EVENTS = {}
 
 def populate(path, session):
-    populate_countries(path, session)
-    populate_actors(path, session)
-    populate_regions(path, session)
-    populate_interactions(path, session)
-    populate_events(path, session)
+    #populate_countries(path, session)
+    #populate_actors(path, session)
+    #populate_regions(path, session)
+    #populate_interactions(path, session)
+    #populate_events(path, session)
     
     session.close_all()
 def populate_countries(path, session):
@@ -41,9 +41,9 @@ def populate_countries(path, session):
         country_id = 1
         for key in countries:
             COUNTRIES[key] = country_id
-            session.add(countries[key])
+            #session.add(countries[key])
             country_id = country_id + 1
-        session.commit()
+        #session.commit()
         print 'added all countries'
 def populate_actors(path, session):
     with open(path, 'rb') as csvfile:
@@ -68,8 +68,8 @@ def populate_actors(path, session):
         total = len(actors)
         for key in actors:
             key
-            session.add(actors[key])
-            session.commit()
+            #session.add(actors[key])
+            #session.commit()
             progress = progress + 1
             ACTORS[key] = progress
             print "Ingested %s out of %s actors." % (progress, total)
@@ -132,7 +132,7 @@ def populate_events(path, session):
             if row[2]:
                 event_id_no_cnty = row[2]
             else:
-                event_id_no_cnty = ''
+                event_id_no_cnty = None
             if row[3]:
                 event_date = datetime.datetime.strptime(row[3], "%d/%m/%Y").date()
             else:
@@ -148,60 +148,63 @@ def populate_events(path, session):
             if row[7]:    
                 actor_1_id = ACTORS[row[7]]
             else:
-                actor_1_id = ''
+                actor_1_id = None
             if row[8]:    
                 actor_ally_1_id = ACTORS[row[8]]
             else:
-                actor_ally_1_id = ''
-            if row[9]:    
-                inter_1_id = ACTORS[row[9]]
-                inter_1_id = ''
+                actor_ally_1_id = None
+            if row[9]:
+                inter_1_id = row[9]
+            else:
+                inter_1_id = None
             if row[10]:    
                 actor_2_id = ACTORS[row[10]]
             else:
-                actor_2_id = ''
+                actor_2_id = None
             if row[11]:    
                 actor_ally_2_id = ACTORS[row[11]]
-            if row[12]:    
-                inter_2_id = ACTORS[row[12]]
             else:
-                inter_2_id = ''
+                actor_ally_2_id = None
+            if row[12]:    
+                inter_2_id = row[12]
+            else:
+                inter_2_id = None
             if row[13]:    
                 interaction = row[13]
             else:
-                interaction = ''
+                interaction = None
             if row[14]:    
                 country_id = COUNTRIES[row[14]]
             else:
-                country_id = ''
+                country_id = None
             if row[15]:    
                 admin_1_id = REGIONS[row[15]]
             else:
-                admin_1_id = ''
+                admin_1_id = None
             if row[16]:    
                 admin_2_id = REGIONS[row[16]]
             else:
-                admin_2_id = ''
+                admin_2_id = None
             if row[17]:    
                 admin_3_id = REGIONS[row[17]]
             else:
-                admin_3_id = ''
+                admin_3_id = None
             if row[18]:    
                 location_id = REGIONS[row[18]]
             else:
-                location_id = ''
+                location_id = None
             if row[19]:    
                 latitud = row[19]
             else:
-                latitud = ''
+                latitud = None
             if row[20]:    
                 longitud = row[20]
             else:
-                longitud = ''
+                longitud = None
             if row[21]:    
                 geo_precis = row[21]
             else:
-                geo_precis = ''
+                geo_precis = None
             if row[22]:    
                 source = row[22]
             else:
@@ -213,7 +216,7 @@ def populate_events(path, session):
             if row[24]:    
                 fatalities = row[24]
             else:
-                fatalities = ''
+                fatalities = None
             events[event_id_cnty] = Event(
                                 event_id_cnty = event_id_cnty,
                                 event_id_no_cnty = event_id_no_cnty,
@@ -245,8 +248,9 @@ def populate_events(path, session):
         region_id = 1
         for key in events:
             EVENTS[key] = event_id_cnty
-            session.add(events[key])
-            session.commit()
+            if progress > 112967:
+                session.add(events[key])
+                session.commit()
             progress = progress + 1
             region_id = region_id + 1
             print "Ingested %s out of %s events." % (progress, total)

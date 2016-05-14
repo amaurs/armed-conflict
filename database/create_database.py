@@ -84,5 +84,5 @@ if __name__ == '__main__':
         engine_url = 'postgres://%s:%s@localhost:%s/armed-conflict' %(sys.argv[4], sys.argv[5], server.local_bind_port)
         print engine_url
         ENGINE = create_engine(engine_url)
-        BASE.metadata.drop_all(ENGINE)
-        BASE.metadata.create_all(ENGINE)
+        #BASE.metadata.drop_all(ENGINE)
+        #BASE.metadata.create_all(ENGINE)

@@ -1,3 +1,6 @@
 **/.project
 *+/.pyproject
-**/.pyc
+**/*.pyc
+**/.DS_Store
+backup
+deploy.sh
