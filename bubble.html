@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Hello World</title>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    </head>
+    <body>
+        <div id="chart_div" style="width: 1200px; height: 800px;"></div>
+        <script>
+          google.charts.load("current", {packages:["corechart"]});
+          google.charts.setOnLoadCallback(drawChart);
+          function getJSON(url, callback) {
+              var xhr = new XMLHttpRequest();
+              xhr.open("get", url, true);
+              xhr.responseType = "json";
+              xhr.onload = function() {
+                var status = xhr.status;
+                if (status == 200) {
+                  callback(null, xhr.response);
+                } else {
+                  callback(status);
+                }
+              };
+              xhr.send();
+          };
+          function drawChart()
+          {
+            getJSON("http://96.126.98.33:5000/bubble",
+                      function(err, data) {
+                        if (err != null) {
+                          console.log("Something went wrong: " + err);
+                        } else {
+                          console.log(data);
+
+                          var dataTable = google.visualization.arrayToDataTable(data.results);
+
+                          var chart = new google.visualization.BubbleChart(document.getElementById('chart_div'));
+  
+                          var options = {
+                            hAxis: {title: 'Conflicts'},
+                            vAxis: {title: 'Fatalities  '},
+                            colorAxis: {colors: ['yellow', 'red']},
+                            bubble: {textStyle: {fontSize: 8,auraColor: 'none'}}
+                          };
+  
+                          chart.draw(dataTable, options);
+                        }
+                      });
+          }
+          
+        </script>
+    </body>
+</html>
+
+

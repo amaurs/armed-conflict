@@ -21,7 +21,7 @@
 <script src="/mapbox.js/assets/data/realworld.388.js"></script>
 
 <div style="float: left; clear: none">
-   <div id='map' style="width: 100%; height: 95%">
+   <div id='map' style="width: 100%">
    </div>
    <div style="position:absolute;bottom:0; width: 100%; height: 5%">
     <select id='countries'>
@@ -98,6 +98,8 @@
         <option value="2015">2015</option>
     </select>
    </div>
+   <div id='heat-map' style="width: 100%">
+   </div>
 </div>
 
 <script>
@@ -108,12 +110,17 @@ function querystring(key) {
    while ((m=re.exec(document.location.search)) != null) r[r.length]=m[1];
    return r;
 }
-
+var layers = [];
+var clusterGroup;
 function drawMap()
 {
     L.mapbox.accessToken = 'pk.eyJ1IjoiYW1hdSIsImEiOiIxTmxLVWlVIn0.JJuKgBjkpUtOs0VZjtmJRw';
-    map = L.mapbox.map('map', 'mapbox.satellite')
-        .setView([-8.47162,28.89659], 3);
+    if(!map)
+    {
+        map = L.mapbox.map('map', 'mapbox.satellite')
+            .setView([-8.47162,28.89659], 5);
+        map._layersMaxZoom=15
+    }
 
 /**
     var featureLayer = L.mapbox.featureLayer()
@@ -123,21 +130,34 @@ function drawMap()
 
         // Since featureLayer is an asynchronous method, we use the `.on('ready'`
 // call to only use its marker data once we know it is actually loaded.
+
+
 L.mapbox.featureLayer('http://96.126.98.33:5000/events/' + country + '/' + year).on('ready', function(e) {
     // The clusterGroup gets each marker in the group added to it
     // once loaded, and then is added to the map
-    var clusterGroup = new L.MarkerClusterGroup({ disableClusteringAtZoom: 12 });
+    clusterGroup = new L.MarkerClusterGroup({ disableClusteringAtZoom: 12 });
     e.target.eachLayer(function(layer) {
+        layers.push(layer);
         clusterGroup.addLayer(layer);
     });
+
+    var center = e.target['_geojson'].center;
+
     map.addLayer(clusterGroup);
+    map.panTo(new L.LatLng(center[1],center[0]),5);
 });
 }
+
+
 
 var handler = function () {
     year = document.getElementById('years').value;
     country = document.getElementById('countries').value;
-    map.remove();
+    
+
+
+    map.removeLayer(clusterGroup);
+    
     drawMap();
 };
 

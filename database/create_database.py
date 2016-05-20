@@ -6,12 +6,14 @@ Created on May 10, 2016
 
 import os
 import sys
+
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, Date
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import create_engine
+
+
 #from sshtunnel import SSHTunnelForwarder
- 
 BASE = declarative_base()
 
 class Country(BASE):
@@ -74,5 +76,3 @@ class Event(BASE):
     source = Column(String(100))
     notes = Column(String(500))
     fatalities = Column(Integer())
-if __name__ == '__main__':
-    pass

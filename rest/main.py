@@ -97,9 +97,10 @@ def events(country,year):
                 
                 query = Query(engine)
                 events = query.get_events(country,year)
-                
+                center = query.get_events_center(country, year)
                 result = { "type": "FeatureCollection",
-                    "features": events
+                    "features": events,
+                    "center":center 
                  }
                 
                 return jsonify(result)
@@ -108,6 +109,48 @@ def events(country,year):
                 print inst.args      # arguments stored in .args
                 print inst           # __str__ allows args to be printed directly
                 return "<h1>error</h1>"
+            
+@app.route('/fatalities/<fatalities>')
+@crossdomain(origin='*')
+def fatalities(fatalities):
+            engine_url = 'postgres://%s:%s@localhost/armed-conflict' %(sys.argv[1], sys.argv[2])
+            
+            print engine_url
+            try:
+                engine = create_engine(engine_url)
+                
+                query = Query(engine)
+                events = query.get_fatalities(fatalities)
+                center = query.get_fatalities_center(fatalities)
+                result = { "type": "FeatureCollection",
+                    "features": events,
+                    "center":center 
+                 }
+                
+                return jsonify(result)
+            except Exception as inst:
+                print type(inst)     # the exception instance
+                print inst.args      # arguments stored in .args
+                print inst           # __str__ allows args to be printed directly
+                return "<h1>error</h1>"
+@app.route('/bubble')
+@crossdomain(origin='*')            
+def get_countries_fatalities():
+            engine_url = 'postgres://%s:%s@localhost/armed-conflict' %(sys.argv[1], sys.argv[2])
+            
+            print engine_url
+            try:
+                engine = create_engine(engine_url)
+                
+                query = Query(engine)
+                events = query.get_countries_fatalities()
+                return jsonify(results=events)
+            except Exception as inst:
+                print type(inst)     # the exception instance
+                print inst.args      # arguments stored in .args
+                print inst           # __str__ allows args to be printed directly
+                return "<h1>error</h1>"
+    
 
 @app.route('/<name>')
 def hello_name2(name):
