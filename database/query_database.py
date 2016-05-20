@@ -87,7 +87,7 @@ class Query(object):
         with self.engine.connect() as connection:
     
             result = []
-            result.append(['id','events','fatalities', 'colour','radius'])
+            result.append(['id','events','fatalities', 'fatalities','events'])
             for data in connection.execute('select c.name as name,f.events as events,f.fatalities as fatalities from fatalities as f,country as c where f.country_id=c.country_id;'):
         
                 result.append([data.name,data.events,data.fatalities,data.fatalities,data.events])

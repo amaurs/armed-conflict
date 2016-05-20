@@ -132,7 +132,7 @@ function drawMap()
 // call to only use its marker data once we know it is actually loaded.
 
 
-L.mapbox.featureLayer('http://96.126.98.33:5000/events/' + country + '/' + year).on('ready', function(e) {
+L.mapbox.featureLayer('http://96.126.98.33/events/' + country + '/' + year).on('ready', function(e) {
     // The clusterGroup gets each marker in the group added to it
     // once loaded, and then is added to the map
     clusterGroup = new L.MarkerClusterGroup({ disableClusteringAtZoom: 12 });

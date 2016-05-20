@@ -3,4 +3,4 @@ PYTHONPATH="$(pwd):${PATH}"
 echo $PYTHONPATH
 export PYTHONPATH
 
-python rest/main.py $1 $2
+/home/amaury/www/sites/amaurs.com/armed-conflict/.virtual/bin/python rest/main.py $1 $2
