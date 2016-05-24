@@ -2,10 +2,9 @@
 <html>
 <head>
 <meta charset=utf-8 />
-<title>Leaflet Markercluster</title>
+<title>Fatalities</title>
 <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 <script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>
-<script src='./node_modules/proj4/dist/proj4.js'></script>
 <link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet' />
 <style>
   body { margin:0; padding:0; }
@@ -15,13 +14,10 @@
 <body>
 <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-heat/v0.1.3/leaflet-heat.js'></script>
 
-<!-- Example data. -->
-<script src="/mapbox.js/assets/data/realworld.388.js"></script>
-
 <div style="float: left; clear: none">
    <div id='map' style="width: 100%">
    </div>
-   <div style="position:absolute;bottom:0; width: 100%; height: 5%">
+   <div style="position:absolute;left:100px;bottom:0; width: 100%; height: 5%">
         <input id="fatalities" type="range"></input>
    </div>
 
@@ -44,26 +40,26 @@ function drawMap()
         map = L.mapbox.map('map', 'mapbox.satellite', {
         zoomControl: false}).setView([4.755856763705008,23.992075732837595], 3);;
     }
-// Disable drag and zoom handlers.
-map.dragging.disable();
-map.touchZoom.disable();
-map.doubleClickZoom.disable();
-map.scrollWheelZoom.disable();
-map.keyboard.disable();
+    // Disable drag and zoom handlers.
+    map.dragging.disable();
+    map.touchZoom.disable();
+    map.doubleClickZoom.disable();
+    map.scrollWheelZoom.disable();
+    map.keyboard.disable();
     
 
     heat = L.heatLayer([], { maxZoom: 9 }).addTo(map);
 
-// We're just using a featureLayer to pull marker data from Mapbox -
-// this is not added to the map.
-var layer = L.mapbox.featureLayer('http://96.126.98.33/fatalities/' + fatalities ).on('ready', function(e) {
-    // Zoom the map to the bounds of the markers.
-    map.fitBounds(layer.getBounds());
-    // Add each marker point to the heatmap.
-    layer.eachLayer(function(l) {
-        heat.addLatLng(l.getLatLng());
+    // We're just using a featureLayer to pull marker data from Mapbox -
+    // this is not added to the map.
+    var layer = L.mapbox.featureLayer('http://96.126.98.33/fatalities/' + fatalities ).on('ready', function(e) {
+        // Zoom the map to the bounds of the markers.
+        map.fitBounds(layer.getBounds());
+        // Add each marker point to the heatmap.
+        layer.eachLayer(function(l) {
+            heat.addLatLng(l.getLatLng());
+        });
     });
-});
 }
 
 

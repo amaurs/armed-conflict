@@ -2,11 +2,11 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Hello World</title>
+        <title>Bubble Chart</title>
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     </head>
     <body>
-        <div id="chart_div" style="width: 1200px; height: 800px;"></div>
+        <div id="chart_div" style="width: 800px; height: 600px;"></div>
         <script>
           google.charts.load("current", {packages:["corechart"]});
           google.charts.setOnLoadCallback(drawChart);
@@ -28,10 +28,9 @@
           {
             getJSON("http://96.126.98.33/bubble",
                       function(err, data) {
-                        if (err != null) {
-                          console.log("Something went wrong: " + err);
+                        if (err != null) 
+                        {
                         } else {
-                          console.log(data);
 
                           var dataTable = google.visualization.arrayToDataTable(data.results);
 
