@@ -3,6 +3,8 @@
 <head>
 <meta charset=utf-8 />
 <title>Armed Conflict</title>
+<link rel="stylesheet" href="./highlight/styles/default.css">
+<script src="./highlight/highlight.pack.js"></script>
 <style>
 .frame
 {
@@ -10,15 +12,149 @@ width:900px;
 height:600px;
 }
 </style>
-
+<script>hljs.initHighlightingOnLoad();</script>
 </head>
 <body>
 <h1>Conflictos Armados</h1>
+
+<p>Para este proyecto se usó la información encontrada en la tabla de datos <a href="http://www.acleddata.com/wp-content/uploads/2016/01/ACLED-Version-6-All-Africa-1997-2015_csv_dyadic.zip">ACLED Version 6 (1997 – 2015) standard file</a>. El propósito de este trabajo no es, de ninguna manera, hacer un estudio detallado de la situación en el continente africano. Es tan solo ofrecer algunas visualizaciones de la información, explorando las herramientas al alcance.</p>
+<p>A continuación se presentan tres distintas visualizaciones y se explica brevemente como se obtuvieron. El proceso comienza con la limpieza, la ingestión y el procesamiento de los datos. Se continua con la creación una plataforma <strong>REST</strong> que permite consultar la información. Finalmente el desarrollo de un cliente simple que consume dicho servicio y lo despliega de una forma clara y atractiva.</p>
+
+<p>Se hizo uso de una base de datos postgres alojada en un servidor remoto. Para poder acceder a dicho servidor desde un script de <strong>python</strong> es necesario utilizar un tunel ssh como se describe a continuación:</p>
+
+<pre><code class="python">
+with SSHTunnelForwarder(
+    (&lt;ip_address&gt;, 22),
+    ssh_username=&lt;ssh_username&gt;,
+    ssh_password=&lt;ssh_password&gt;,
+    remote_bind_address=('127.0.0.1', 5432)) as server:
+    engine_url = 'postgres://&lt;database_user&gt;:&lt;database_password&gt;@localhost:%s/armed-conflict' % server.local_bind_port
+    ENGINE = create_engine(engine_url)
+    klass = sessionmaker(bind=ENGINE)
+    session = klass()
+    populate(&lt;path_to_csv_file&gt;, session)
+</code></pre>
+
+<p>La decisión de usar un servidor dedicado para esto fue para poder hostear esta página y que pudiera ser accesible desde cualquier parte.</p>
+
 <h2>Conflictos</h2>
+
+<p>El servicio <strong>REST</strong> está implementado usando el framework <a href="http://flask.pocoo.org/">flask</a> que permite la implementación de una aplicación de forma rápida y sencilla. La aplicación se conecta con la base de datos postgres y convierte los resultados de las consultas al formato <strong>json</strong> con el cual se responden los <strong>HTTPrequests</strong> del lado del cliente. Para las consultas a la base de datos se usa un paquete de python llamado <a href="http://www.sqlalchemy.org/">SQLAlchemy</a>. La primera consulta implementada obtiene las coordenadas geográficas, así como información básica sobre los eventos. Esta información es dibujada sobre un mapa con la ayuda del framework <a href="https://www.mapbox.com/mapbox.js/api/v2.4.0/">mapbox</a>.</p>
+
+<p>Debido a la cantidad de eventos que la base de datos abarca, se decidió limitar las búsquedas por país y por año. A continuación se muestra como se hace dicha consulta a la base de datos:</p>
+
+<pre><code class="python">	
+def get_events(self, country, year):
+  events = []
+  for event in self.session.query(Event.longitud,Event.latitud, Event.event_id_cnty,Event.fatalities,Event.notes).filter(extract('year', Event.event_date) == year).filter(Event.country_id == country):
+    feature = {}
+    feature["type"] ="Feature"
+    feature["geometry"] = {"type": "Point", "coordinates": [event.longitud,event.latitud]}
+    feature["properties"] = {"title": event.event_id_cnty,
+                             "description": "%s. Fatalities: %s" % (event.notes, event.fatalities),
+                             "marker-symbol": "hospital",
+                             "marker-color": "#ff4136"}
+    events.append(feature)
+  return events
+</code></pre>
+
+<p>Para hacer uso del servicio se usa el formato <a href="http://96.126.98.33/events/35/2004">http://96.126.98.33/events/35/2004</a>, en este caso, estamos consultando los eventos que ocurrieron durante el año <strong>2004</strong> en el país con clave <strong>35</strong>, es decir Angola.</p>
+
+<p>Cuando se despliega demasiada información sobre un mapa, resulta más complicado asimilarla. Debido a la cantidad de eventos considerados y para no contaminar visualmente el mapa se usó un plugin que clusteriza los puntos dependiendo de su nivel de zoom.</p>
+
+<pre><code class="javascript">	
+L.mapbox.featureLayer('http://96.126.98.33/events/' + country + '/' + year).on('ready', function(e) {
+  clusterGroup = new L.MarkerClusterGroup({ disableClusteringAtZoom: 12 });
+  e.target.eachLayer(function(layer) {
+      layers.push(layer);
+      clusterGroup.addLayer(layer);
+  });
+  var center = e.target['_geojson'].center;
+  map.addLayer(clusterGroup);
+  map.panTo(new L.LatLng(center[1],center[0]),5);
+});
+</code></pre>
+
+<p>El mapa se actualiza de forma dinámica haciendo uso de los selectores en la parte inferior.</p>
+
 <iframe class="frame" id="map" src="./map.html"></iframe>
 <h2>Muertes</h2>
+
+<pre><code class="javascript">
+heat = L.heatLayer([], { maxZoom: 9 }).addTo(map);
+
+var layer = L.mapbox.featureLayer('http://96.126.98.33/fatalities/' + fatalities ).on('ready', function(e) 
+{
+    map.fitBounds(layer.getBounds());
+    layer.eachLayer(function(l) {
+        heat.addLatLng(l.getLatLng());
+    });
+});
+</code>
+</pre>
+
+
 <iframe class="frame" id="heatmap" src="./heatmap.html"></iframe>
+
 <h2>Muertes por Conflicto</h2>
+
+<p>Para la siguiente visualización se hizo un agregado de los decesos y los conflictos agrupados por país. El propósito es estudiar la naturaleza de los conflictos dependiendo del país donde tuvieron lugar. Así, podemos ver que hay paises donde los conflictos son particularmente violentos.</p>
+
+<p>El agregado de los datos se realizo con la herramienta <strong>spark</strong> en el ambiente de un python notebook.</p>
+
+<pre><code class="python">
+def get_country_df(country):
+    return sqlContext.sql('select country_id, fatalities from africa where country_id = %s' % country)
+</code></pre>
+
+<p>Debido a la naturaleza de la tabla creada y dificultades encontradas para agregar la dependencia necesaria para conectarse a la base de datos directamente, se optó por producir sentencias sql que posteriormente fueron ejecutadas en el servidor postgres.</p>
+
+<pre><code class="python">	
+for i in range(1,49):
+    data_frame = get_country_df(i)
+    total_fatalities = data_frame.map(lambda x: x.fatalities).reduce(lambda a,b: int(a)+int(b))
+    total_events = data_frame.count()
+    print "INSERT INTO public.fatalities VALUES (%s,%s,%s);" % (i, total_events, total_fatalities)
+</code></pre>
+
+<p>Las sentencias creadas se ven de la siguiente forma:</p>
+
+<pre><code class="sql">	
+INSERT INTO public.fatalities VALUES (1,765,1334);
+INSERT INTO public.fatalities VALUES (2,183,16);
+INSERT INTO public.fatalities VALUES (3,1204,1265);
+INSERT INTO public.fatalities VALUES (4,8228,74883);
+INSERT INTO public.fatalities VALUES (5,760,3101);
+INSERT INTO public.fatalities VALUES (6,2120,45986);
+INSERT INTO public.fatalities VALUES (7,613,7585);
+INSERT INTO public.fatalities VALUES (8,17489,23875);
+INSERT INTO public.fatalities VALUES (9,1558,3951);
+INSERT INTO public.fatalities VALUES (10,370,497);
+.
+.
+.
+</code></pre>
+
+<p>El diagrama de burbujas permite ver de forma espacial, gráfica y por colores la relación entre la cantidad de conflictos y la cantidad de decesos. Se utilizó el framework de <a href="https://developers.google.com/chart/interactive/docs/gallery/bubblechart">google charts</a> para el diagrama a continuación.</p>
+
+<pre><code class="javascript">	
+
+function drawChart()
+{
+  getJSON("http://96.126.98.33/bubble", function(err, data) {
+    var dataTable = google.visualization.arrayToDataTable(data.results);
+    var chart = new google.visualization.BubbleChart(document.getElementById('chart_div'));
+    var options = {
+        hAxis: {title: 'Conflicts'},
+        vAxis: {title: 'Fatalities  '},
+        colorAxis: {colors: ['yellow', 'red']},
+        bubble: {textStyle: {fontSize: 8,auraColor: 'none'}}
+        };
+    chart.draw(dataTable, options);
+  });
+}
+</code></pre>
+
 <iframe class="frame" id="bubble" src="./bubble.html"></iframe>
 
 </body>

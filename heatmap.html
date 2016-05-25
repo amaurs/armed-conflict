@@ -40,7 +40,7 @@ function drawMap()
         map = L.mapbox.map('map', 'mapbox.satellite', {
         zoomControl: false}).setView([4.755856763705008,23.992075732837595], 3);;
     }
-    // Disable drag and zoom handlers.
+    
     map.dragging.disable();
     map.touchZoom.disable();
     map.doubleClickZoom.disable();
@@ -50,12 +50,9 @@ function drawMap()
 
     heat = L.heatLayer([], { maxZoom: 9 }).addTo(map);
 
-    // We're just using a featureLayer to pull marker data from Mapbox -
-    // this is not added to the map.
-    var layer = L.mapbox.featureLayer('http://96.126.98.33/fatalities/' + fatalities ).on('ready', function(e) {
-        // Zoom the map to the bounds of the markers.
+    var layer = L.mapbox.featureLayer('http://96.126.98.33/fatalities/' + fatalities ).on('ready', function(e) 
+    {
         map.fitBounds(layer.getBounds());
-        // Add each marker point to the heatmap.
         layer.eachLayer(function(l) {
             heat.addLatLng(l.getLatLng());
         });
