@@ -8,13 +8,23 @@
 <style>
 .frame
 {
-width:900px;
-height:600px;
+	margin: auto;
+	width:100%;
+	height:600px;
+	border: none;	
+}
+
+.center {
+    margin: auto;
+    width: 80%;
+    border:none;
+    
 }
 </style>
 <script>hljs.initHighlightingOnLoad();</script>
 </head>
 <body>
+<div class="center">
 <h1>Conflictos Armados</h1>
 
 <p>Para este proyecto se usó la información encontrada en la tabla de datos <a href="http://www.acleddata.com/wp-content/uploads/2016/01/ACLED-Version-6-All-Africa-1997-2015_csv_dyadic.zip">ACLED Version 6 (1997 – 2015) standard file</a>. El propósito de este trabajo no es, de ninguna manera, hacer un estudio detallado de la situación en el continente africano. Es tan solo ofrecer algunas visualizaciones de la información, explorando las herramientas al alcance.</p>
@@ -78,7 +88,12 @@ L.mapbox.featureLayer('http://96.126.98.33/events/' + country + '/' + year).on('
 <p>El mapa se actualiza de forma dinámica haciendo uso de los selectores en la parte inferior.</p>
 
 <iframe class="frame" id="map" src="./map.html"></iframe>
+
 <h2>Muertes</h2>
+
+<p>Con el fin de visualizar por zona geoggráfica la cantidad de decesos ocurridos entre 1997 y 2015, se creo un mapa de calor. Esta visualización consume un nuevo servicio <strong>REST</strong> que filtra los eventos por cantidad. El slider en la parte inferior del mapa controla los parámetros del filtro. Entre más alto sea el valor, disminuye la cantidad de eventos con los que el servicio responde. Con la configuración actual, si deslizamos al máximo el slider, obtenemos los eventos con un número de decesos mayor a 110. Podemos de este modo ver las zonas africanas con un mayor índice de violencia.</p>
+
+<p>El servicio lo podemos consumir usando el formato <a href="http://96.126.98.33/fatalities/50">http://96.126.98.33/fatalities/50</a>, donde el número representa la cantidad que queremos usar como filtro, en este caso 50 decesos. Para el mapa de calor se usó un plugin que algomera puntos geográficos y los despliega en una nueva capa.</p>
 
 <pre><code class="javascript">
 heat = L.heatLayer([], { maxZoom: 9 }).addTo(map);
@@ -137,7 +152,7 @@ INSERT INTO public.fatalities VALUES (10,370,497);
 
 <p>El diagrama de burbujas permite ver de forma espacial, gráfica y por colores la relación entre la cantidad de conflictos y la cantidad de decesos. Se utilizó el framework de <a href="https://developers.google.com/chart/interactive/docs/gallery/bubblechart">google charts</a> para el diagrama a continuación.</p>
 
-<pre><code class="javascript">	
+<pre><code class="javascript">
 
 function drawChart()
 {
@@ -157,5 +172,41 @@ function drawChart()
 
 <iframe class="frame" id="bubble" src="./bubble.html"></iframe>
 
+<p>Una idea que se podría integrar con el diagrama de burbujas es un selector para poder elegir la información por año. Al desagregar los datos de esta manera, se podría ver interactivamente la evolución de la violencia en los diferentes estados. Dicha función no sería complicada de implementar, pero queda fuera del alcance de este trabajo.</p>
+
+<h2>Agrupación por Características</h2>
+
+<p>Siguiendo las ideas propuestas por <strong>Dirk Hesse</strong> en su blog <a href="https://data-adventures.com/2016/04/26/grouping-conflicts-in-africa-spark-edition/">Data Adventures</a>, se intentó agrupar los conflictos usando la librería de <strong>Spark</strong> para machine learning <a href="https://spark.apache.org/docs/1.1.0/mllib-guide.html">MLlib</a>. Los resultados no fueron del todo satisfactorios ya que el número de grupos que el algoritmo arrojaba siempre era menor al deseado. Para dicha agrupación se usaron las variables de latitud, longitud y tiempo (normalizadas y estandarizadas).</p>
+
+<pre><code class="python">	
+rdd = sqlContext.sql('select country_id, event_date, fatalities, latitud, longitud from africa_countries')\
+    .map(lambda x: Vectors.dense(float(x.latitud),\
+                                 float(x.longitud),\
+                                 int((datetime.datetime.now()-parse(x.event_date)).seconds),\
+                                 int(x.fatalities)))
+features = rdd.map(lambda x: [x[0],x[1],x[2]])
+fatalities = rdd.map(lambda x: x[3])
+scaler = StandardScaler(withMean=True, withStd=True).fit(features)
+normalizedData = scaler.transform(features)
+nClusters = 10
+model = KMeans().train(normalizedData, nClusters, maxIterations=100,\
+                        initializationMode="k-means||")
+labels = model.predict(normalizedData)
+labels.distinct().count()
+</code></pre>
+
+Debido a lo poco satisfactorio que resultó el análisis de agrupación por características, no se implementó una visualización del mismo. 
+
+<h2>A Futuro</h2>
+
+<p>Los datos de la <strong>ACLED</strong> ofrecen muchas posibilides de estudio.</p> 
+<p>Usando la misma herramienta, se podría entrenar un clasificador que permita hacer predicción sobre eventos nuevos que ocurran en el continente africano. Dicho clasificador podría predecir, dada la información sobre el tipo de evento, los actores, el país y la locación, si habrá o no habrá decesos en el mismo. Esto podría der de utilidad para permitir actuar con rapidez y asignar recursos de manera eficiente para mitigar los conflictos más violentos lo antes posible.</p> 
+
+<p>Por otro lado, se podría hacer un estudio temporal para buscar las condiciones bajo las cuales fue posible disminuir la violencia en ciertos paises y tratar de replicarlo en zonas donde la violencia aún efervece.</p>
+
+<h2>Referencias</h2>
+
+Para la elaboración de este trabajo se usó la documentación de la <strong>ACLED</strong>, que se puede descargar <a href="http://www.acleddata.com/wp-content/uploads/2016/01/ACLED_Codebook_2016.pdf">aquí</a>. Se usaron ideas del blog de <strong>Dirk Hesse</strong> cuyo link es: <a href="https://data-adventures.com/2016/04/26/grouping-conflicts-in-africa-spark-edition/">Data Adventures</a>. El código se encuentra en el siguiente <a href="https://github.com/amaurs/armed-conflict">repositorio</a>.
+</div>
 </body>
 </html>
