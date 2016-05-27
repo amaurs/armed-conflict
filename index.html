@@ -28,7 +28,7 @@
 <h1>Conflictos Armados</h1>
 
 <p>Para este proyecto se usó la información encontrada en la tabla de datos <a href="http://www.acleddata.com/wp-content/uploads/2016/01/ACLED-Version-6-All-Africa-1997-2015_csv_dyadic.zip">ACLED Version 6 (1997 – 2015) standard file</a>. El propósito de este trabajo no es, de ninguna manera, hacer un estudio detallado de la situación en el continente africano. Es tan solo ofrecer algunas visualizaciones de la información, explorando las herramientas al alcance.</p>
-<p>A continuación se presentan tres distintas visualizaciones y se explica brevemente como se obtuvieron. El proceso comienza con la limpieza, la ingestión y el procesamiento de los datos. Se continua con la creación una plataforma <strong>REST</strong> que permite consultar la información. Finalmente el desarrollo de un cliente simple que consume dicho servicio y lo despliega de una forma clara y atractiva.</p>
+<p>A continuación se presentan tres distintas visualizaciones y se explica brevemente como se obtuvieron. El proceso comienza con la limpieza, la ingestión y el procesamiento de los datos. Se continua con la creación de una plataforma <strong>REST</strong> que permite consultar la información. Finalmente, se desarrolla un cliente simple que consume dicho servicio y lo despliega de una forma clara y atractiva.</p>
 
 <p>Se hizo uso de una base de datos postgres alojada en un servidor remoto. Para poder acceder a dicho servidor desde un script de <strong>python</strong> es necesario utilizar un tunel ssh como se describe a continuación:</p>
 
@@ -45,13 +45,13 @@ with SSHTunnelForwarder(
     populate(&lt;path_to_csv_file&gt;, session)
 </code></pre>
 
-<p>La decisión de usar un servidor dedicado para esto fue para poder hostear esta página y que pudiera ser accesible desde cualquier parte.</p>
+<p>La decisión de usar un servidor dedicado para esto fue poder hacer uso de del servicio desde cualquier parte.</p>
 
 <h2>Conflictos</h2>
 
-<p>El servicio <strong>REST</strong> está implementado usando el framework <a href="http://flask.pocoo.org/">flask</a> que permite la implementación de una aplicación de forma rápida y sencilla. La aplicación se conecta con la base de datos postgres y convierte los resultados de las consultas al formato <strong>json</strong> con el cual se responden los <strong>HTTPrequests</strong> del lado del cliente. Para las consultas a la base de datos se usa un paquete de python llamado <a href="http://www.sqlalchemy.org/">SQLAlchemy</a>. La primera consulta implementada obtiene las coordenadas geográficas, así como información básica sobre los eventos. Esta información es dibujada sobre un mapa con la ayuda del framework <a href="https://www.mapbox.com/mapbox.js/api/v2.4.0/">mapbox</a>.</p>
+<p>El servicio <strong>REST</strong> está implementado usando el framework <a href="http://flask.pocoo.org/">flask</a> que permite la implementación de una aplicación de forma rápida y sencilla. La aplicación se conecta con la base de datos postgres y convierte los resultados de las consultas al formato <strong>json</strong> con el cual se responden los <strong>HTTPRequests</strong> del lado del cliente. Para las consultas a la base de datos se usa un paquete de python llamado <a href="http://www.sqlalchemy.org/">SQLAlchemy</a>. La primera consulta implementada obtiene las coordenadas geográficas, así como información básica sobre los eventos. Esta información es dibujada sobre un mapa con la ayuda de un framework llamado <a href="https://www.mapbox.com/mapbox.js/api/v2.4.0/">mapbox</a>.</p>
 
-<p>Debido a la cantidad de eventos que la base de datos abarca, se decidió limitar las búsquedas por país y por año. A continuación se muestra como se hace dicha consulta a la base de datos:</p>
+<p>Debido a la cantidad de eventos que la base de datos abarca, se decidió limitar las búsquedas por país y por año. A continuación se muestra como se hace dicha consulta:</p>
 
 <pre><code class="python">	
 def get_events(self, country, year):
@@ -70,7 +70,7 @@ def get_events(self, country, year):
 
 <p>Para hacer uso del servicio se usa el formato <a href="http://96.126.98.33/events/35/2004">http://96.126.98.33/events/35/2004</a>, en este caso, estamos consultando los eventos que ocurrieron durante el año <strong>2004</strong> en el país con clave <strong>35</strong>, es decir Angola.</p>
 
-<p>Cuando se despliega demasiada información sobre un mapa, resulta más complicado asimilarla. Debido a la cantidad de eventos considerados y para no contaminar visualmente el mapa se usó un plugin que clusteriza los puntos dependiendo de su nivel de zoom.</p>
+<p>Cuando se despliega demasiada información sobre un mapa, resulta más complicado asimilarla. Debido a la cantidad de eventos considerados y para no contaminar visualmente el mapa, se usó un plugin que agrupa los puntos dependiendo del nivel de zoom.</p>
 
 <pre><code class="javascript">	
 L.mapbox.featureLayer('http://96.126.98.33/events/' + country + '/' + year).on('ready', function(e) {
@@ -85,13 +85,13 @@ L.mapbox.featureLayer('http://96.126.98.33/events/' + country + '/' + year).on('
 });
 </code></pre>
 
-<p>El mapa se actualiza de forma dinámica haciendo uso de los selectores en la parte inferior.</p>
+<p>El mapa se actualiza de forma dinámica seleccionando el país y el año a consultar.</p>
 
 <iframe class="frame" id="map" src="./map.html"></iframe>
 
 <h2>Muertes</h2>
 
-<p>Con el fin de visualizar por zona geoggráfica la cantidad de decesos ocurridos entre 1997 y 2015, se creo un mapa de calor. Esta visualización consume un nuevo servicio <strong>REST</strong> que filtra los eventos por cantidad. El slider en la parte inferior del mapa controla los parámetros del filtro. Entre más alto sea el valor, disminuye la cantidad de eventos con los que el servicio responde. Con la configuración actual, si deslizamos al máximo el slider, obtenemos los eventos con un número de decesos mayor a 110. Podemos de este modo ver las zonas africanas con un mayor índice de violencia.</p>
+<p>Con el fin de visualizar por zona geoggráfica la cantidad de decesos ocurridos entre 1997 y 2015, se creo un mapa de calor. Esta visualización consume un nuevo servicio <strong>REST</strong> que filtra los eventos por cantidad. El slider en la parte inferior del mapa controla los parámetros del filtro. Entre más alto sea el valor, disminuye la cantidad de eventos con los que el servicio responde. Con la configuración actual, si deslizamos al máximo el slider, obtenemos los eventos con un número de decesos mayor a 110. Esta visualización permite ver las zonas africanas con un mayor índice de violencia.</p>
 
 <p>El servicio lo podemos consumir usando el formato <a href="http://96.126.98.33/fatalities/50">http://96.126.98.33/fatalities/50</a>, donde el número representa la cantidad que queremos usar como filtro, en este caso 50 decesos. Para el mapa de calor se usó un plugin que algomera puntos geográficos y los despliega en una nueva capa.</p>
 
@@ -113,9 +113,9 @@ var layer = L.mapbox.featureLayer('http://96.126.98.33/fatalities/' + fatalities
 
 <h2>Muertes por Conflicto</h2>
 
-<p>Para la siguiente visualización se hizo un agregado de los decesos y los conflictos agrupados por país. El propósito es estudiar la naturaleza de los conflictos dependiendo del país donde tuvieron lugar. Así, podemos ver que hay paises donde los conflictos son particularmente violentos.</p>
+<p>Para la siguiente visualización se hizo un agregado de los decesos y los conflictos agrupados por país. El propósito es estudiar la naturaleza de los conflictos dependiendo del país donde tuvieron lugar. Así, podemos detectar los paises donde los conflictos son particularmente violentos.</p>
 
-<p>El agregado de los datos se realizo con la herramienta <strong>spark</strong> en el ambiente de un python notebook.</p>
+<p>El agregado de los datos se realizo con la herramienta <strong>spark</strong>, usando un python notebook.</p>
 
 <pre><code class="python">
 def get_country_df(country):
@@ -150,7 +150,7 @@ INSERT INTO public.fatalities VALUES (10,370,497);
 .
 </code></pre>
 
-<p>El diagrama de burbujas permite ver de forma espacial, gráfica y por colores la relación entre la cantidad de conflictos y la cantidad de decesos. Se utilizó el framework de <a href="https://developers.google.com/chart/interactive/docs/gallery/bubblechart">google charts</a> para el diagrama a continuación.</p>
+<p>El diagrama de burbujas permite ver de forma espacial, gráfica y por colores la relación entre la cantidad de conflictos y la cantidad de decesos. Se utilizó el framework <a href="https://developers.google.com/chart/interactive/docs/gallery/bubblechart">google charts</a> para el diagrama que se muestra a continuación.</p>
 
 <pre><code class="javascript">
 
@@ -172,7 +172,7 @@ function drawChart()
 
 <iframe class="frame" id="bubble" src="./bubble.html"></iframe>
 
-<p>Una idea que se podría integrar con el diagrama de burbujas es un selector para poder elegir la información por año. Al desagregar los datos de esta manera, se podría ver interactivamente la evolución de la violencia en los diferentes estados. Dicha función no sería complicada de implementar, pero queda fuera del alcance de este trabajo.</p>
+<p>Una idea que se podría integrar con el diagrama de burbujas es un selector para poder elegir la información por año. Al desagregar los datos de esta manera, se podría ver interactivamente la evolución de la violencia en los diferentes paises. Dicha función no sería complicada de implementar, pero queda fuera del alcance de este trabajo.</p>
 
 <h2>Agrupación por Características</h2>
 
